@@ -2,9 +2,9 @@
 % Speech enhancement using OMLSA
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function [y_out_time_left] = denoise(filename,i) %input a audio wav
+function [y_out_time_left] = denoise(filename,count) %input a audio wav
 [y_in_orig, fs0] = audioread(filename);
-y_in_orig = y_in_orig(:,i);
+y_in_orig = y_in_orig(:,count);
 fs = 16e3;
 y_in_time = resample(y_in_orig, fs, fs0);
 data_length = size(y_in_time, 1);
