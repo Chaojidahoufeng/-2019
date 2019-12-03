@@ -5,7 +5,8 @@ clear all; clc; close all;
 angle = zeros(1,14);
 speed = 343;
 distance = 0.1;
-delta = 10;
+delta = 5;
+resam = 100;
 right_ans = [   8.8000000e+01
    3.0000000e+01
    1.7600000e+02
@@ -21,12 +22,17 @@ right_ans = [   8.8000000e+01
    1.4700000e+02
    1.4700000e+02];
 for id = 1:14
-%     [Input, Fs] = audioread(['./train/',num2str(id),'.wav']);   %不使用降噪方法
-%     x1 = Input(:,1);
-%     x2 = Input(:,2);
-%     x1 = resample(x1, 100, 1);
-%     x2 = resample(x2, 100, 1);
-%     Fs = Fs*100;
+    [Input, Fs] = audioread(['./train/',num2str(id),'.wav']);   %不使用降噪方法
+    x1 = Input(:,1);
+    x2 = Input(:,2);
+    lala = untitled;
+    x1 = filter(lala, x1);
+    x2 = filter(lala, x2);
+    x1 = filter(lala, x1);
+    x2 = filter(lala, x2);
+    x1 = resample(x1, resam, 1);
+    x2 = resample(x2, resam, 1);
+    Fs = Fs*resam;
 
 %     [~, Fs] = audioread(['./train/',num2str(id),'.wav']);  %使用谱减法降噪
 %     x1 = pujian(['./train/',num2str(id),'.wav'],1);
@@ -35,12 +41,13 @@ for id = 1:14
 %     x2 = resample(x2, 100, 1);
 %     Fs = Fs*100;
     
-    [~, Fs] = audioread(['./train/',num2str(id),'.wav']);  %使用高级方法降噪
-    x1 = denoise(['./train/',num2str(id),'.wav'],1);
-    x2 = denoise(['./train/',num2str(id),'.wav'],2);
-    x1 = resample(x1, 100, 1);
-    x2 = resample(x2, 100, 1);
-    Fs = Fs*100;
+%     [~, Fs] = audioread(['./train/',num2str(id),'.wav']);  %使用高级方法降噪
+%     x1 = denoise(['./train/',num2str(id),'.wav'],1);
+%     x2 = denoise(['./train/',num2str(id),'.wav'],2);
+%     x1 = resample(x1, 100, 1);
+%     x2 = resample(x2, 100, 1);
+%     Fs = Fs*100;
+
     N = length(x1);  %长度
     n = 0:N-1;
     t=n/Fs;   %时间序列
@@ -57,23 +64,24 @@ for id = 1:14
     X2=fft(x2,2*N-1);
     Sxy=X1.*conj(X2);
     Cxy=fftshift(ifft(Sxy));
+    Cxyn = Cxy(N-ceil(resam*5.8309):N+ceil(resam*5.8309));
 %     subplot(212);
 %     t1=(0:2*N-2)/Fs;    
 %     plot(t1,Cxy,'b');
 %     title('互相关函数');xlabel('时间/s');ylabel('Rx1x2(t)');grid on
-    [~,location]=max(Cxy);%求出最大值max,及最大值所在的位置（第几行）location;
-    d=location-N;
+    [~,location]=max(Cxyn);%求出最大值max,及最大值所在的位置（第几行）location;
+    d=location-ceil(resam*5.8309);
     Delay=d/Fs;              %求得时间延迟
     cos_angle = Delay*speed/distance;
     angle(id) = acosd(cos_angle);
-    angle(id)
+    disp([angle(id), right_ans(id)]);
 end
-% for id = 1:14  %修正
-%     if(imag(angle(id))>0)
-%         angle(id) = delta;
-%     elseif(imag(angle(id))<0)
-%         angle(id) = 180-delta;
-%     end
-% end
+for id = 1:14  %修正
+    if(imag(angle(id))>0)
+        angle(id) = delta;
+    elseif(imag(angle(id))<0)
+        angle(id) = 180-delta;
+    end
+end
 error = real(angle) - right_ans';
-mean(abs(error));
+mean(abs(error))
